@@ -25,7 +25,7 @@ function App() {
             <Route path="/beeChat" element={<BeeChat />} />
 
             {/* Version route which returns a json*/}
-            {/* It can be found at https://url/version.tsx */}
+            {/* It can be found at https://url/version.json */}
 
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />

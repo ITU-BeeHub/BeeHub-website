@@ -6,7 +6,6 @@ import CalendarIcon from "./icons/CalendarIcon";
 import FolderSyncIcon from "./icons/FolderSyncIcon";
 import WebcamIcon from "./icons/WebCamIcon";
 import PickaxeIcon from "./icons/PickaxeIcon";
-import SettingsIcon from "./icons/SettingsIcon";
 import HamburgerIcon from "./icons/Hamburger";
 
 export default function Sidebar() {
