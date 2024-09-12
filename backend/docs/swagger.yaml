@@ -1,0 +1,44 @@
+info:
+  contact: {}
+  description: Bu, BeeHub web sitesi için API belgeleridir.
+  title: BeeHub Web Site API
+  version: "1.0"
+paths:
+  /download:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Operating System (windows, mac, linux)
+        in: query
+        name: os
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the installer file
+          schema:
+            type: file
+      summary: Download installer for the selected OS
+      tags:
+      - Download Manager
+  /version:
+    get:
+      consumes:
+      - application/json
+      description: Returns the current version of the BeeHub Web API
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get version information
+      tags:
+      - Version
+swagger: "2.0"
