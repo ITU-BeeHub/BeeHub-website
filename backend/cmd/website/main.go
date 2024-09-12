@@ -1,50 +1,75 @@
 package main
 
 import (
-	"net/http"
+	"bufio"
+	"fmt"
+	"log"
+	"os"
+	"strings"
 
+	"github.com/ITU-BeeHub/BeeHub-website/backend/internal/versionControl"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-type VersionResponse struct {
-	Version     string `json:"version"`
-	DownloadURL string `json:"download_url"`
-}
+// @title BeeHub Web Site API
+// @version 1.0
+// @description Bu, BeeHub web sitesi için API belgeleridir.
 
+// @host localhost:8080
+// @BasePath /
+// @schemes http
 func main() {
-	// Gin router'ı oluştur
+	// .env dosyasını yükle
+	LoadEnvVariables()
+
 	r := gin.Default()
 
-	// Version endpoint'i
-	r.GET("/version", func(c *gin.Context) {
-		response := VersionResponse{
-			Version:     "1.0.0",                                         //Sample version
-			DownloadURL: "https://yourdomain.com/download/installer.exe", //Sample download URL
+	fmt.Println(os.Getenv("SWAGGER_ENABLED"))
+	if os.Getenv("SWAGGER_ENABLED") == "true" {
+		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	} else {
+		fmt.Println("Swagger is disabled")
+	}
+
+	// Version control route
+	r.GET("/version", versionControl.VersionHandler)
+
+	// Other routes can be added here
+
+	r.Run(":8080") // start service at port 8080
+}
+
+func LoadEnvVariables() {
+	file, err := os.Open(".env")
+	if err != nil {
+		log.Fatalf("Error opening .env file: %v", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) == 0 || strings.HasPrefix(line, "#") {
+			// Boş veya yorum satırlarını atla
+			continue
 		}
-		c.JSON(http.StatusOK, response)
-	})
 
-	// Download endpoint'i
-	r.GET("/download/:os", func(c *gin.Context) {
-		os := c.Param("os")
-
-		// İşletim sistemine göre dosya yolu belirle
-		var filePath string
-		switch os {
-		case "windows":
-			filePath = "./path/to/your/installer.exe"
-		case "mac":
-			filePath = "./path/to/your/installer.dmg"
-		case "linux":
-			filePath = "./path/to/your/installer.deb"
-		default:
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Desteklenmeyen işletim sistemi"})
-			return
+		pair := strings.SplitN(line, "=", 2)
+		if len(pair) != 2 {
+			log.Printf("Ignoring malformed line: %s", line)
+			continue
 		}
 
-		c.FileAttachment(filePath, "installer")
-	})
+		key := strings.TrimSpace(pair[0])
+		value := strings.TrimSpace(pair[1])
 
-	// Sunucuyu başlat
-	r.Run(":8080")
+		// Çevresel değişkeni ayarla
+		os.Setenv(key, value)
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatalf("Error reading .env file: %v", err)
+	}
 }
