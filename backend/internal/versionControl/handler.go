@@ -3,6 +3,7 @@ package versionControl
 import (
 	"net/http"
 
+	"github.com/ITU-BeeHub/BeeHub-website/backend/pkg/models"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -30,7 +31,7 @@ func (h *Handler) GetVersion(c *gin.Context) {
 	versionInfo, err := h.service.GetVersionInfo()
 	if err != nil {
 		h.logger.Error("Error while fetching version info: ", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch version info"})
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{Error: "Could not fetch version info"})
 		return
 	}
 

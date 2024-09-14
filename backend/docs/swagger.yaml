@@ -1,9 +1,82 @@
+definitions:
+  auth.AdminLoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  models.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  models.TokenResponse:
+    properties:
+      token:
+        type: string
+    type: object
 info:
   contact: {}
   description: Bu, BeeHub web sitesi için API belgeleridir.
   title: BeeHub Web Site API
   version: "1.0"
 paths:
+  /admin/download-stats:
+    get:
+      description: Returns the download statistics for the application, accessible
+        only by admin users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns download statistics grouped by OS
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get download statistics
+      tags:
+      - Admin
+  /admin/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates an admin user and returns a JWT token.
+      parameters:
+      - description: Admin login credentials
+        in: body
+        name: admin
+        required: true
+        schema:
+          $ref: '#/definitions/auth.AdminLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT token
+          schema:
+            $ref: '#/definitions/models.TokenResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Invalid username or password
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Admin login
+      tags:
+      - Auth
   /download:
     get:
       consumes:
@@ -22,6 +95,25 @@ paths:
           schema:
             type: file
       summary: Download installer for the selected OS
+      tags:
+      - Download Manager
+  /download-stats:
+    get:
+      description: Returns download statistics for the application.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Download statistics grouped by OS
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Get download statistics
       tags:
       - Download Manager
   /version:
