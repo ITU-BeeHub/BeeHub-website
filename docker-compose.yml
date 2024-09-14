@@ -1,0 +1,22 @@
+services:
+  backend:
+    build: 
+      context: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SWAGGER_ENABLED=true
+    networks:
+      - website-net
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    networks:
+      - website-net
+
+networks:
+  website-net:
+    driver: bridge
