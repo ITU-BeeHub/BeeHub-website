@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import AppleIcon from '../components/icons/AppleIcon';
 import { BiLogoWindows } from "react-icons/bi";
 import { FaApple } from "react-icons/fa";
 
