@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 import Home from './pages/Home'
@@ -7,7 +6,7 @@ import Login from "./pages/Login";
 import AdminPanel from "./pages/AdminPanel";
 import DownloadState from "./components/DownloadState";
 import IpLogs from "./components/IpLogs";
-
+import PrivateRoute from "./components/PrivateRoute";
 
 function AppContent() {
   return (
@@ -15,15 +14,15 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/admin/login" element={<Login />} />
-        <Route path="/admin/dashboard" element={<AdminPanel />} />
-        <Route path="/admin/download-stats" element={<DownloadState />} />
-        <Route path="/admin/ip-logs" element={<IpLogs />} />
+
+        {/* Admin dashboard rotalarını koruyoruz */}
+        <Route path="/admin/dashboard" element={<PrivateRoute><AdminPanel /></PrivateRoute>} />
+        <Route path="/admin/download-stats" element={<PrivateRoute><DownloadState /></PrivateRoute>} />
+        <Route path="/admin/ip-logs" element={<PrivateRoute><IpLogs /></PrivateRoute>} />
       </Routes>
     </Layout>
   );
 }
-
-
 
 function App() {
   return (
@@ -33,4 +32,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

@@ -1,22 +1,62 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import AdminSideBar from './AdminSidebar';
 
-const ipLogs = [
-    { ip: '192.168.1.1', timestamp: '2023-06-15 14:30:22', country: 'United States', os: 'Windows' },
-    { ip: '10.0.0.1', timestamp: '2023-06-15 14:28:15', country: 'Canada', os: 'Mac' },
-    { ip: '172.16.0.1', timestamp: '2023-06-15 14:25:03', country: 'United Kingdom', os: 'Linux' },
-    { ip: '192.168.0.5', timestamp: '2023-06-15 14:20:18', country: 'Germany', os: 'Windows' },
-    { ip: '10.0.0.2', timestamp: '2023-06-15 14:15:30', country: 'France', os: 'Mac' },
-];
+type IPLog = {
+    ip: string;
+    timestamp: string;
+    country: string;
+    os: string;
+};
+
+type DownloadLog = {
+    IPAddress: string;
+    CreatedAt: string;
+    Country?: string;
+    OS: string;
+};
 
 const IPLogs: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [ipLogs, setIpLogs] = useState<IPLog[]>([]);
 
-    const filteredLogs = ipLogs.filter(log =>
-        log.ip.includes(searchTerm) ||
-        log.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.os.toLowerCase().includes(searchTerm.toLowerCase())
+    useEffect(() => {
+        const fetchIPLogs = async () => {
+            try {
+                const token = sessionStorage.getItem("token");
+                const headers = {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                };
+
+                const response = await fetch('http://localhost:8080/admin/ip-logs', { headers });
+                const data: DownloadLog[] = await response.json();
+
+                console.log("API'den gelen veriler:", data);
+
+                // Gelen verinin bir dizi olup olmadığını kontrol edin
+                if (Array.isArray(data)) {
+                    const logs: IPLog[] = data.map((log) => ({
+                        ip: log.IPAddress || 'Unknown',
+                        timestamp: log.CreatedAt ? new Date(log.CreatedAt).toLocaleString() : 'Unknown',
+                        country: log.Country || 'Unknown',
+                        os: log.OS || 'Unknown',
+                    }));
+                    setIpLogs(logs);
+                } else {
+                    console.error('Beklenmeyen veri formatı:', data);
+                }
+            } catch (error) {
+                console.error('Error fetching IP logs:', error);
+            }
+        };
+
+        fetchIPLogs();
+    }, []);
+
+    const filteredLogs = ipLogs.filter((log) =>
+        (log.ip || '').includes(searchTerm) ||
+        (log.country || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (log.os || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -47,14 +87,22 @@ const IPLogs: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredLogs.map((log, index) => (
-                                <tr key={index}>
-                                    <td className="px-6 py-4 whitespace-nowrap">{log.ip}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">{log.timestamp}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">{log.country}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">{log.os}</td>
+                            {filteredLogs.length > 0 ? (
+                                filteredLogs.map((log, index) => (
+                                    <tr key={index}>
+                                        <td className="px-6 py-4 whitespace-nowrap">{log.ip}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{log.timestamp}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{log.country}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{log.os}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={4} className="px-6 py-4 text-center">
+                                        No logs found.
+                                    </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
                 </div>

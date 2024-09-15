@@ -49,6 +49,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/ip-logs": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns recent IP logs, accessible only by admin users.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get IP logs",
+                "responses": {
+                    "200": {
+                        "description": "Returns list of downloads with IP and OS",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Download"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/login": {
             "post": {
                 "description": "Authenticates an admin user and returns a JWT token.",
@@ -95,6 +129,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/monthly-download-stats": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns the monthly download statistics, accessible only by admin users.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get monthly download statistics",
+                "responses": {
+                    "200": {
+                        "description": "Returns monthly download statistics",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.MonthlyDownloadStats"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/download": {
             "get": {
                 "consumes": [
@@ -121,35 +189,6 @@ const docTemplate = `{
                         "description": "Returns the installer file",
                         "schema": {
                             "type": "file"
-                        }
-                    }
-                }
-            }
-        },
-        "/download-stats": {
-            "get": {
-                "description": "Returns download statistics for the application.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Download Manager"
-                ],
-                "summary": "Get download statistics",
-                "responses": {
-                    "200": {
-                        "description": "Download statistics grouped by OS",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "integer"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
                         }
                     }
                 }
@@ -198,10 +237,42 @@ const docTemplate = `{
                 }
             }
         },
+        "models.Download": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ipaddress": {
+                    "type": "string"
+                },
+                "os": {
+                    "description": "windows, mac, linux gibi",
+                    "type": "string"
+                }
+            }
+        },
         "models.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.MonthlyDownloadStats": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "month": {
                     "type": "string"
                 }
             }

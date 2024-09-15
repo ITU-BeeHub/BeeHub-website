@@ -9,9 +9,30 @@ definitions:
     - password
     - username
     type: object
+  models.Download:
+    properties:
+      country:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: integer
+      ipaddress:
+        type: string
+      os:
+        description: windows, mac, linux gibi
+        type: string
+    type: object
   models.ErrorResponse:
     properties:
       error:
+        type: string
+    type: object
+  models.MonthlyDownloadStats:
+    properties:
+      count:
+        type: integer
+      month:
         type: string
     type: object
   models.TokenResponse:
@@ -47,6 +68,27 @@ paths:
       summary: Get download statistics
       tags:
       - Admin
+  /admin/ip-logs:
+    get:
+      description: Returns recent IP logs, accessible only by admin users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns list of downloads with IP and OS
+          schema:
+            items:
+              $ref: '#/definitions/models.Download'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get IP logs
+      tags:
+      - Admin
   /admin/login:
     post:
       consumes:
@@ -77,6 +119,28 @@ paths:
       summary: Admin login
       tags:
       - Auth
+  /admin/monthly-download-stats:
+    get:
+      description: Returns the monthly download statistics, accessible only by admin
+        users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns monthly download statistics
+          schema:
+            items:
+              $ref: '#/definitions/models.MonthlyDownloadStats'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get monthly download statistics
+      tags:
+      - Admin
   /download:
     get:
       consumes:
@@ -95,25 +159,6 @@ paths:
           schema:
             type: file
       summary: Download installer for the selected OS
-      tags:
-      - Download Manager
-  /download-stats:
-    get:
-      description: Returns download statistics for the application.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Download statistics grouped by OS
-          schema:
-            additionalProperties:
-              type: integer
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      summary: Get download statistics
       tags:
       - Download Manager
   /version:

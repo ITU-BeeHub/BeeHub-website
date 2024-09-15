@@ -12,16 +12,29 @@ const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ child
     </button>
 );
 
-
 export default function Home() {
-    const [selectedOS, setSelectedOS] = useState("windows")
+    const [selectedOS, setSelectedOS] = useState("windows");
+
+    // İndirme butonuna basıldığında backend'e GET isteği gönderme fonksiyonu
+    const handleDownload = async () => {
+        const downloadUrl = `http://localhost:8080/download?os=${selectedOS}`; // Backend URL'sini güncelledik
+
+        try {
+            // İndirme işlemini başlatmak için yeni bir pencere veya sekme açabiliriz
+            window.location.href = downloadUrl;
+        } catch (error) {
+            console.error("Download error:", error);
+            alert("An error occurred while downloading. Please try again.");
+        }
+    };
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-white relative overflow-hidden mt-[-80px]">
             <div>
                 <h1 className="mb-4 text-4xl font-bold text-[#212121] z-10">Get BeeHub!</h1>
             </div>
             <div className="flex flex-col items-center z-10">
-                <div className="flex items-center justify-center     space-x-0 rounded-full overflow-hidden shadow-md  mt-8 mb-6    ">
+                <div className="flex items-center justify-center space-x-0 rounded-full overflow-hidden shadow-md  mt-8 mb-6">
                     <button
                         className={`p-4 w-14 h-11 flex items-center justify-center transition-colors ${selectedOS === "windows" ? "bg-[#FDC003] text-[#0372CE]" : "bg-[#E0E0E0] text-[#737373]"
                             }`}
@@ -37,7 +50,7 @@ export default function Home() {
                         <FaApple className="h-6 w-6" />
                     </button>
                 </div>
-                <Button className="px-8 py-4 text-xl font-bold rounded-lg">
+                <Button className="px-8 py-4 text-xl font-bold rounded-lg" onClick={handleDownload}>
                     Download {selectedOS === "windows" ? "Windows" : "Mac"}
                 </Button>
             </div>

@@ -1,22 +1,64 @@
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Link } from 'react-router-dom'; // Link bileşenini import edin
+import React, { useEffect, useState } from 'react';
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts';
 import AdminSideBar from '../components/AdminSidebar';
 
-// Mock data for the chart
-const osData = [
-    { name: 'Windows', downloads: 1234 },
-    { name: 'Mac', downloads: 987 },
-];
+type OsDataItem = {
+    name: string;
+    downloads: number;
+};
 
-// Mock data for recent IP logs
-const recentIPs = [
-    { ip: '192.168.1.1', timestamp: '2023-06-15 14:30:22' },
-    { ip: '10.0.0.1', timestamp: '2023-06-15 14:28:15' },
-    { ip: '172.16.0.1', timestamp: '2023-06-15 14:25:03' },
-];
+type RecentIP = {
+    ip: string;
+    timestamp: string;
+};
 
 const AdminPanel: React.FC = () => {
+    const [osData, setOsData] = useState<OsDataItem[]>([]);
+    const [recentIPs, setRecentIPs] = useState<RecentIP[]>([]);
+    const [totalDownloads, setTotalDownloads] = useState<number>(0);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const token = sessionStorage.getItem("token");
+                const headers = {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                };
+
+                // OS verilerini çekmek için
+                const osResponse = await fetch('http://localhost:8080/admin/download-stats', { headers });
+                const osDataJson: { [key: string]: number } = await osResponse.json();
+                const osChartData: OsDataItem[] = Object.keys(osDataJson).map(os => ({
+                    name: os,
+                    downloads: osDataJson[os],
+                }));
+                setOsData(osChartData);
+
+                // Toplam indirme sayısını hesaplayın
+                const total = Object.values(osDataJson).reduce((sum: number, count: number) => sum + count, 0);
+                setTotalDownloads(total);
+
+                // Recent IP logs verilerini çekmek için
+                const ipResponse = await fetch('http://localhost:8080/admin/ip-logs', { headers });
+                const ipDataJson: any[] = await ipResponse.json();
+                // IP loglarını uygun formata dönüştürün
+                const ipLogs: RecentIP[] = ipDataJson.map((log: any) => ({
+                    ip: log.ip_address,
+                    timestamp: new Date(log.created_at).toLocaleString(),
+                }));
+                setRecentIPs(ipLogs);
+
+            } catch (error) {
+                console.error('Error fetching admin data:', error);
+            }
+        };
+
+        fetchData();
+    }, []);
+
     return (
         <div className="flex h-screen bg-gray-100">
             {/* Sidebar */}
@@ -29,7 +71,7 @@ const AdminPanel: React.FC = () => {
                 {/* Total Downloads Card */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                     <h3 className="text-xl font-semibold text-gray-700 mb-2">Total Downloads</h3>
-                    <p className="text-4xl font-bold text-blue-600">2,221</p>
+                    <p className="text-4xl font-bold text-blue-600">{totalDownloads}</p>
                 </div>
 
                 {/* OS Breakdown Chart */}

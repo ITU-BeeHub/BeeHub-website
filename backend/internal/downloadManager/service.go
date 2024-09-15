@@ -71,12 +71,11 @@ func GetDownloadStats(db *gorm.DB) (map[string]int, error) {
 	return stats, nil
 }
 
-// GetMonthlyDownloadStats, aylık indirme istatistiklerini döner
 func GetMonthlyDownloadStats(db *gorm.DB) ([]models.MonthlyDownloadStats, error) {
 	var monthlyStats []models.MonthlyDownloadStats
 
 	err := db.Model(&models.Download{}).
-		Select("DATE_TRUNC('month', created_at) as month, COUNT(*) as count").
+		Select("strftime('%Y-%m', created_at) as month, COUNT(*) as count").
 		Group("month").
 		Order("month").
 		Scan(&monthlyStats).Error
