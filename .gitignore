@@ -26,3 +26,4 @@ go.work.sum
 schedules.json
 .DS_Store
 addDropBot/bot
+backend/installers/installer.zip

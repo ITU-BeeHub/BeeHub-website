@@ -6,10 +6,13 @@ import (
 	"os"
 
 	_ "github.com/ITU-BeeHub/BeeHub-website/backend/docs"
+	adminpanel "github.com/ITU-BeeHub/BeeHub-website/backend/internal/adminPanel"
 	"github.com/ITU-BeeHub/BeeHub-website/backend/internal/auth"
 	"github.com/ITU-BeeHub/BeeHub-website/backend/internal/downloadManager"
 	"github.com/ITU-BeeHub/BeeHub-website/backend/internal/versionControl"
 	"github.com/ITU-BeeHub/BeeHub-website/backend/pkg/config"
+	"github.com/ITU-BeeHub/BeeHub-website/backend/pkg/models"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -33,6 +36,14 @@ func main() {
 	// Gin router'ını başlat
 	r := gin.Default()
 
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173", "http://localhost"}, // İzin verilen domain'ler
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Authorization", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
+
 	// // PostgreSQL bağlantısı için DSN (Data Source Name) oluşturuyoruz
 	// dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 	// 	cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort)
@@ -54,6 +65,12 @@ func main() {
 	if err != nil {
 		logger.Fatal("Failed to initialize GORM with SQLite database: ", err)
 	}
+	// Veritabanı modellerini migrate ederek tabloları oluşturun
+	err = db.AutoMigrate(&models.Download{}, &models.Admin{}) // Admin ve Download tablolarını oluşturuyoruz
+	if err != nil {
+		logger.Fatal("Failed to migrate database models: ", err)
+	}
+
 	// Veritabanı middleware'ini ekleyin
 	r.Use(DBMiddleware(db))
 	// Authentication ve admin paneli yapılandırması
@@ -68,7 +85,9 @@ func main() {
 
 	// Admin paneli için middleware
 	// İndirme istatistikleri endpoint'i (JWT ile korunmuş)
-	r.GET("/admin/download-stats", auth.AuthMiddleware(), downloadManager.DownloadStatsHandler(db))
+	r.GET("/admin/download-stats", auth.AuthMiddleware(), adminpanel.AdminDownloadStatsHandler(db))
+	r.GET("/admin/monthly-download-stats", auth.AuthMiddleware(), adminpanel.AdminMonthlyDownloadStatsHandler(db))
+	r.GET("/admin/ip-logs", auth.AuthMiddleware(), adminpanel.AdminIPLogsHandler(db))
 
 	if os.Getenv("SWAGGER_ENABLED") == "true" {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

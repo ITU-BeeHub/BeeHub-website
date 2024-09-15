@@ -1,12 +1,11 @@
 package downloadManager
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/ITU-BeeHub/BeeHub-website/backend/pkg/models"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 )
 
 type Handler struct {
@@ -54,27 +53,17 @@ func (h *Handler) Download(c *gin.Context) {
 		h.logger.Error("Error while saving download info: ", err)
 	}
 
+	// Doğru dosya adını belirlemek için dosya adı ekliyoruz
+	var fileName string
+	switch os {
+	case "windows":
+		fileName = "installer.exe"
+	case "mac":
+		fileName = "installer.dmg"
+	}
+
 	// Dosya indirilmeye sunulur
 	h.logger.Infof("File found: %s, serving to client", filePath)
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
 	c.File(filePath)
-}
-
-// DownloadStatsHandler, tüm kullanıcılar tarafından erişilebilen indirilen dosya istatistiklerini döner.
-// @Summary Get download statistics
-// @Description Returns download statistics for the application.
-// @Tags Download Manager
-// @Produce json
-// @Success 200 {object} map[string]int "Download statistics grouped by OS"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
-// @Router /download-stats [get]
-func DownloadStatsHandler(db *gorm.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		stats, err := GetDownloadStats(db)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.ErrorResponse{Error: "Could not fetch download stats"})
-			return
-		}
-
-		c.JSON(http.StatusOK, stats)
-	}
 }
