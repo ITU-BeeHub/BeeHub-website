@@ -23,7 +23,7 @@ func (s *Service) GetVersionInfo() (map[string]string, error) {
 		s.logger.Warn("APP_VERSION environment variable is not set, using default version")
 	}
 
-	downloadURL := fmt.Sprintf("https://yourdomain.com/download/installer_%s.exe", version)
+	downloadURL := fmt.Sprintf("https://beehubapp.com", version)
 
 	versionInfo := map[string]string{
 		"version":      version,
