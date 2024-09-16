@@ -29,7 +29,7 @@ const AdminPanel: React.FC = () => {
                 };
 
                 // OS verilerini çekmek için
-                const osResponse = await fetch('http://localhost:8080/admin/download-stats', { headers });
+                const osResponse = await fetch('https://beehubapp.com/api/admin/download-stats', { headers });
                 const osDataJson: { [key: string]: number } = await osResponse.json();
                 const osChartData: OsDataItem[] = Object.keys(osDataJson).map(os => ({
                     name: os,
@@ -42,7 +42,7 @@ const AdminPanel: React.FC = () => {
                 setTotalDownloads(total);
 
                 // Recent IP logs verilerini çekmek için
-                const ipResponse = await fetch('http://localhost:8080/admin/ip-logs', { headers });
+                const ipResponse = await fetch('https://beehubapp.com/api/admin/ip-logs', { headers });
                 const ipDataJson: any[] = await ipResponse.json();
                 // IP loglarını uygun formata dönüştürün
                 const ipLogs: RecentIP[] = ipDataJson.map((log: any) => ({

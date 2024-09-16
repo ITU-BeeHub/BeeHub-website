@@ -28,7 +28,7 @@ const IPLogs: React.FC = () => {
                     Authorization: `Bearer ${token}`,
                 };
 
-                const response = await fetch('http://localhost:8080/admin/ip-logs', { headers });
+                const response = await fetch('https://beehubapp.com/api/admin/ip-logs', { headers });
                 const data: DownloadLog[] = await response.json();
 
                 console.log("API'den gelen veriler:", data);

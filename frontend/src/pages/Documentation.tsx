@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom'; // For internal linking
 
-import BeakerIcon from '../components/icons/BeakerIcon'; // Use appropriate icon or image components
 import PickaxeIcon from '../components/icons/PickaxeIcon';
 import ArchiveIcon from '../components/icons/ArchiveIcon';
 import ChatIcon from '../components/icons/WebCamIcon';

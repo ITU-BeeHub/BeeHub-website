@@ -28,7 +28,7 @@ const DownloadStats: React.FC = () => {
                 };
 
                 // OS verilerini çekmek için
-                const osResponse = await fetch('http://localhost:8080/admin/download-stats', { headers });
+                const osResponse = await fetch('https://beehubapp.com/api/admin/download-stats', { headers });
                 const osDataJson: { [key: string]: number } = await osResponse.json();
                 const osChartData: OsDataItem[] = Object.keys(osDataJson).map(os => ({
                     name: os,
@@ -37,7 +37,7 @@ const DownloadStats: React.FC = () => {
                 setOsData(osChartData);
 
                 // Aylık verileri çekmek için
-                const monthlyResponse = await fetch('http://localhost:8080/admin/monthly-download-stats', { headers });
+                const monthlyResponse = await fetch('https://beehubapp.com/api/admin/monthly-download-stats', { headers });
                 const monthlyDataJson: { month: string; count: number }[] = await monthlyResponse.json();
                 console.log('Monthly data:', monthlyDataJson);
                 const monthlyChartData: MonthlyDataItem[] = monthlyDataJson.map((item) => ({

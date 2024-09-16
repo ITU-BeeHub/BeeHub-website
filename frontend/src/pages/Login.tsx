@@ -10,7 +10,7 @@ export default function Login() {
     const handleLogin = async (e: any) => {
         e.preventDefault();
         try {
-            const response = await fetch("http://localhost:8080/admin/login", {
+            const response = await fetch("https://beehubapp.com/api/admin/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -42,12 +42,11 @@ export default function Login() {
                 <h1 className="mb-4 text-4xl font-bold text-[#212121]">Admin Login</h1>
                 <form onSubmit={handleLogin}>
                     <div className="mb-4">
-                        <label htmlFor="email" className="block text-[#212121] font-bold mb-2">
+                        <label className="block text-[#212121] font-bold mb-2">
                             Email
                         </label>
                         <input
                             id="email"
-                            type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-[#212121] leading-tight focus:outline-none focus:shadow-outline"

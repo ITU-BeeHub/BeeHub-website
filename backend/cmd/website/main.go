@@ -36,7 +36,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "http://localhost"}, // İzin verilen domain'ler
+		AllowOrigins:     []string{"http://localhost:5173", "http://localhost", "https://localhost:443", "https://localhost"}, // İzin verilen domain'ler
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Authorization", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -50,13 +50,13 @@ func main() {
 	// PostgreSQL için Gorm Open kullanımı
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		logger.Fatal("Database connection failed: ", err)
+		//logger.Fatal("Database connection failed: ", err)
 	}
 
 	// Veritabanı modellerini migrate ederek tabloları oluşturun
 	err = db.AutoMigrate(&models.Download{}, &models.Admin{}) // Admin ve Download tablolarını oluşturuyoruz
 	if err != nil {
-		logger.Fatal("Failed to migrate database models: ", err)
+		//logger.Fatal("Failed to migrate database models: ", err)
 	}
 
 	// Veritabanı middleware'ini ekleyin
@@ -69,13 +69,13 @@ func main() {
 	downloadService := downloadManager.NewService(logger)
 	downloadHandler := downloadManager.NewHandler(downloadService, logger)
 
-	r.POST("/admin/login", adminHandler.LoginHandler)
+	r.POST("/api/admin/login", adminHandler.LoginHandler)
 
 	// Admin paneli için middleware
 	// İndirme istatistikleri endpoint'i (JWT ile korunmuş)
-	r.GET("/admin/download-stats", auth.AuthMiddleware(), adminpanel.AdminDownloadStatsHandler(db))
-	r.GET("/admin/monthly-download-stats", auth.AuthMiddleware(), adminpanel.AdminMonthlyDownloadStatsHandler(db))
-	r.GET("/admin/ip-logs", auth.AuthMiddleware(), adminpanel.AdminIPLogsHandler(db))
+	r.GET("/api//admin/download-stats", auth.AuthMiddleware(), adminpanel.AdminDownloadStatsHandler(db))
+	r.GET("/api/admin/monthly-download-stats", auth.AuthMiddleware(), adminpanel.AdminMonthlyDownloadStatsHandler(db))
+	r.GET("/api/admin/ip-logs", auth.AuthMiddleware(), adminpanel.AdminIPLogsHandler(db))
 
 	if os.Getenv("SWAGGER_ENABLED") == "true" {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -88,10 +88,10 @@ func main() {
 	versionHandler := versionControl.NewHandler(versionService, logger)
 
 	// Download route'u
-	r.GET("/download", downloadHandler.Download)
+	r.GET("/api/download", downloadHandler.Download)
 
 	// Version route'u
-	r.GET("/version", versionHandler.GetVersion)
+	r.GET("/api/version", versionHandler.GetVersion)
 
 	// Sunucuyu başlat
 	port := fmt.Sprintf(":%s", cfg.Port)

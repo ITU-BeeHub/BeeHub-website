@@ -17,7 +17,7 @@ export default function Home() {
 
     // İndirme butonuna basıldığında backend'e GET isteği gönderme fonksiyonu
     const handleDownload = async () => {
-        const downloadUrl = `http://localhost:8080/download?os=${selectedOS}`; // Backend URL'sini güncelledik
+        const downloadUrl = `https://beehubapp.com/api/download?os=${selectedOS}`; // Backend URL'sini güncelledik
 
         try {
             // İndirme işlemini başlatmak için yeni bir pencere veya sekme açabiliriz

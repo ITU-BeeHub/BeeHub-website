@@ -1,5 +1,4 @@
 import React from 'react';
-import BeakerIcon from '../components/icons/BeakerIcon'; // Use the BeakerIcon or replace with a relevant icon for BeePicker
 
 const BeePickerPage: React.FC = () => {
   return (
@@ -7,7 +6,7 @@ const BeePickerPage: React.FC = () => {
       {/* Scrollable container */}
       <div className="flex-1 overflow-y-scroll px-4 py-8">
         <div className="max-w-4xl w-full mx-auto p-8 bg-white rounded-lg shadow-lg">
-          
+
           <h1 className="text-4xl font-bold text-[#0372CE] text-center mb-6">
             BeePicker
           </h1>
@@ -48,14 +47,14 @@ const BeePickerPage: React.FC = () => {
 
           </div>
         </div>
-      {/* Added these so that footer isnt colliding with content*/}
-      <br />
-      <br />
-      <br />
-      <br />
+        {/* Added these so that footer isnt colliding with content*/}
+        <br />
+        <br />
+        <br />
+        <br />
       </div>
     </div>
-    
+
   );
 };
 
