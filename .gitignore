@@ -27,3 +27,4 @@ schedules.json
 .DS_Store
 addDropBot/bot
 backend/installers/installer.zip
+backend.tar

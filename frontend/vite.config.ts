@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
-  base: './', // Dosya yollarını doğru ayarlamak için
+  base: '/', // Dosya yollarını doğru ayarlamak için
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')
@@ -17,7 +17,4 @@ export default defineConfig({
   css: {
     postcss: './postcss.config.js',
   },
-  build: {
-    sourcemap: false, // Disable sourcemaps
-  }
 });
