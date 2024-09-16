@@ -53,7 +53,8 @@ const Documentation: React.FC = () => {
               </p>
             </div>
 
-            {/* Linux */}
+            {/*
+            //{/* Linux //}
             <div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">For Linux</h3>
               <p className="text-gray-600">
@@ -66,6 +67,7 @@ const Documentation: React.FC = () => {
                 3. Launch BeeHub from your application launcher.
               </p>
             </div>
+            */}
           </div>
 
           {/* Disclaimer Section */}
