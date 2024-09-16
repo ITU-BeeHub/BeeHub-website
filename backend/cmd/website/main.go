@@ -50,13 +50,13 @@ func main() {
 	// PostgreSQL için Gorm Open kullanımı
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		//logger.Fatal("Database connection failed: ", err)
+		logger.Fatal("Database connection failed: ", err)
 	}
 
 	// Veritabanı modellerini migrate ederek tabloları oluşturun
 	err = db.AutoMigrate(&models.Download{}, &models.Admin{}) // Admin ve Download tablolarını oluşturuyoruz
 	if err != nil {
-		//logger.Fatal("Failed to migrate database models: ", err)
+		logger.Fatal("Failed to migrate database models: ", err)
 	}
 
 	// Veritabanı middleware'ini ekleyin
