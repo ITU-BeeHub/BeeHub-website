@@ -98,7 +98,6 @@ func GetIPLogs(db *gorm.DB) ([]models.Download, error) {
 	return logs, nil
 }
 
-// GetInstallerFilePath iş mantığını içerir ve doğru dosya yolunu döner.
 func (s *Service) GetInstallerFilePath(osystem string) (string, error) {
 	var filePath string
 	version := os.Getenv("APP_VERSION")
@@ -106,13 +105,14 @@ func (s *Service) GetInstallerFilePath(osystem string) (string, error) {
 	s.logger.Infof("Getting installer file path for OS: %s", osystem)
 	switch osystem {
 	case "windows":
-		filePath = fmt.Sprintf("./installers/installer%s.exe", version)
+		filePath = fmt.Sprintf("/usr/local/beehub/installers/installer_%s.exe", version)
 	case "mac":
-		filePath = fmt.Sprintf("./installers/installer%s.dmg", version)
+		filePath = fmt.Sprintf("/usr/local/beehub/installers/installer_%s.dmg", version)
 	default:
 		s.logger.Warn("Unsupported OS provided: ", osystem)
 		return "", errors.New("unsupported OS")
 	}
+
 	s.logger.Infof("File path found for OS %s: %s", osystem, filePath)
 	return filePath, nil
 }

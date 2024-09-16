@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 
@@ -16,7 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	_ "modernc.org/sqlite"
 )
@@ -44,27 +43,16 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	// // PostgreSQL bağlantısı için DSN (Data Source Name) oluşturuyoruz
-	// dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-	// 	cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort)
+	// PostgreSQL bağlantısı için DSN (Data Source Name) oluşturuyoruz
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort)
 
-	// // PostgreSQL için Gorm Open kullanımı
-	// db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	// if err != nil {
-	// 	logger.Fatal("Database connection failed: ", err)
-	// }
-
-	// Use modernc.org/sqlite to open an in-memory SQLite database
-	sqlDB, err := sql.Open("sqlite", ":memory:")
+	// PostgreSQL için Gorm Open kullanımı
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		logger.Fatal("Failed to connect to in-memory SQLite (no CGO): ", err)
+		logger.Fatal("Database connection failed: ", err)
 	}
 
-	// Pass the sql.DB instance to GORM
-	db, err := gorm.Open(sqlite.Dialector{Conn: sqlDB}, &gorm.Config{})
-	if err != nil {
-		logger.Fatal("Failed to initialize GORM with SQLite database: ", err)
-	}
 	// Veritabanı modellerini migrate ederek tabloları oluşturun
 	err = db.AutoMigrate(&models.Download{}, &models.Admin{}) // Admin ve Download tablolarını oluşturuyoruz
 	if err != nil {

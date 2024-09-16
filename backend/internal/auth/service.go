@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/ITU-BeeHub/BeeHub-website/backend/pkg/models"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -29,17 +30,17 @@ type Claims struct {
 
 // AuthenticateAdmin, kullanıcı adı ve şifreyi doğrular ve JWT token döner
 func (s *AdminService) AuthenticateAdmin(username, password string) (string, error) {
-	//var admin models.Admin
+	var admin models.Admin
 
-	// // Veritabanından admin kullanıcısını bul
-	// if err := s.db.Where("username = ?", username).First(&admin).Error; err != nil {
-	// 	return "", errors.New("invalid username or password")
-	// }
+	// Veritabanından admin kullanıcısını bul
+	if err := s.db.Where("username = ?", username).First(&admin).Error; err != nil {
+		return "", errors.New("invalid username or password")
+	}
 
-	// // Şifreyi kontrol et
-	// if !CheckPasswordHash(password, admin.Password) {
-	// 	return "", errors.New("invalid username or password")
-	// }
+	// Şifreyi kontrol et
+	if !CheckPasswordHash(password, admin.Password) {
+		return "", errors.New("invalid username or password")
+	}
 
 	// JWT token oluştur
 	token, err := generateJWT(username)
