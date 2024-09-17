@@ -38,6 +38,16 @@ const Documentation: React.FC = () => {
                 3. Once installed, launch BeeHub from the Start menu or desktop shortcut.
               </p>
             </div>
+            
+          {/* Disclaimer Section */}
+          <div className="mt-8 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+            <p className="font-semibold">Disclaimer:</p>
+            <p className="text-gray-700">
+              You may need to trust this installer/application as Windows might give a warning during installation.
+              This is because we could not sign our application with an EV (Extended Validation) certificate. Unfortunately,
+              we don't have the budget to afford this certificate at the moment. Rest assured, the application is safe to use.
+            </p>
+          </div>
 
             {/* macOS */}
             <div>
@@ -51,6 +61,21 @@ const Documentation: React.FC = () => {
               <p className="text-gray-600">
                 3. Launch BeeHub from the Applications folder or by using Spotlight search.
               </p>
+              
+          <div className="mt-8 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+              <p className="text-gray-600 font-semibold">
+                **Important: Since the application is not signed, macOS may prevent it from launching. To bypass this issue, follow these steps:
+              </p>
+              <ol className="list-decimal list-inside text-gray-600 mb-4">
+                <li>Open your terminal and navigate to the Applications folder:</li>
+                <pre className="bg-gray-200 p-2 rounded-md text-sm">cd /Applications</pre>
+                <li>Run the following command to allow BeeHub to bypass the security check:</li>
+                <pre className="bg-gray-200 p-2 rounded-md text-sm">xattr -cr BeeHub.app</pre>
+              </ol>
+              <p className="text-gray-600">
+                After running this command, you can launch BeeHub as usual.
+              </p>
+              </div>
             </div>
 
             {/*
@@ -70,15 +95,7 @@ const Documentation: React.FC = () => {
             */}
           </div>
 
-          {/* Disclaimer Section */}
-          <div className="mt-8 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
-            <p className="font-semibold">Disclaimer:</p>
-            <p className="text-gray-700">
-              You may need to trust this installer/application as Windows might give a warning during installation.
-              This is because we could not sign our application with an EV (Extended Validation) certificate. Unfortunately,
-              we don't have the budget to afford this certificate at the moment. Rest assured, the application is safe to use.
-            </p>
-          </div>
+          
         </div>
 
         {/* Features Section */}
