@@ -28,3 +28,5 @@ schedules.json
 addDropBot/bot
 backend/installers/installer.zip
 backend.tar
+backend/installers/installer_1.0.0.dmg
+backend/beehubweb

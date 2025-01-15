@@ -105,9 +105,9 @@ func (s *Service) GetInstallerFilePath(osystem string) (string, error) {
 	s.logger.Infof("Getting installer file path for OS: %s", osystem)
 	switch osystem {
 	case "windows":
-		filePath = fmt.Sprintf("/usr/local/beehub/installers/installer_%s.exe", version)
+		filePath = fmt.Sprintf("/usr/local/bin/beehub/installers/installer_%s.exe", version)
 	case "mac":
-		filePath = fmt.Sprintf("/usr/local/beehub/installers/installer_%s.dmg", version)
+		filePath = fmt.Sprintf("/usr/local/bin/beehub/installers/installer_%s.dmg", version)
 	default:
 		s.logger.Warn("Unsupported OS provided: ", osystem)
 		return "", errors.New("unsupported OS")
