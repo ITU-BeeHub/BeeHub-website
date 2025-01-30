@@ -3,10 +3,9 @@ import Header from "./Header";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     return (
-        <div className=" h-screen overflow-hidden flex-col">
-
+        <div className="min-h-screen flex flex-col">
             <Header />
-            <main className="flex-1 overflow-y-auto   bg-[#F5FDFD] justify-center">
+            <main className="flex-grow overflow-auto">
                 {children}
             </main>
             <Footer />
