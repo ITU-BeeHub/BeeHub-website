@@ -8,6 +8,7 @@ import (
 	adminpanel "github.com/ITU-BeeHub/BeeHub-website/backend/internal/adminPanel"
 	"github.com/ITU-BeeHub/BeeHub-website/backend/internal/auth"
 	"github.com/ITU-BeeHub/BeeHub-website/backend/internal/downloadManager"
+	"github.com/ITU-BeeHub/BeeHub-website/backend/internal/notification"
 	"github.com/ITU-BeeHub/BeeHub-website/backend/internal/versionControl"
 	"github.com/ITU-BeeHub/BeeHub-website/backend/pkg/config"
 	"github.com/ITU-BeeHub/BeeHub-website/backend/pkg/models"
@@ -54,7 +55,7 @@ func main() {
 	}
 
 	// Veritabanı modellerini migrate ederek tabloları oluşturun
-	err = db.AutoMigrate(&models.Download{}, &models.Admin{}) // Admin ve Download tablolarını oluşturuyoruz
+	err = db.AutoMigrate(&models.Download{}, &models.Admin{}, &models.Notification{}) // Admin ve Download tablolarını oluşturuyoruz
 	if err != nil {
 		logger.Fatal("Failed to migrate database models: ", err)
 	}
@@ -68,6 +69,8 @@ func main() {
 	// DownloadService ve handler'ı oluştur (dependency injection)
 	downloadService := downloadManager.NewService(logger)
 	downloadHandler := downloadManager.NewHandler(downloadService, logger)
+
+	notificationHandler := notification.NewHandler(db, logger)
 
 	r.POST("/api/admin/login", adminHandler.LoginHandler)
 
@@ -92,6 +95,10 @@ func main() {
 
 	// Version route'u
 	r.GET("/api/version", versionHandler.GetVersion)
+
+	r.GET("/api/notifications", func(c *gin.Context) {
+		notificationHandler.GetActiveNotifications()(c)
+	})
 
 	// Sunucuyu başlat
 	port := fmt.Sprintf(":%s", cfg.Port)
