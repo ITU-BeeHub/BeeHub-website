@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	_ "github.com/ITU-BeeHub/BeeHub-website/backend/docs"
 	adminpanel "github.com/ITU-BeeHub/BeeHub-website/backend/internal/adminPanel"
@@ -13,6 +14,7 @@ import (
 	"github.com/ITU-BeeHub/BeeHub-website/backend/pkg/models"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
@@ -23,6 +25,31 @@ import (
 // @title BeeHub Web Site API
 // @version 1.0
 // @description Bu, BeeHub web sitesi için API belgeleridir.
+
+// connectToDatabaseWithRetry veritabanına bağlanmayı 5 kez dener
+func connectToDatabaseWithRetry(dsn string, logger *logrus.Logger) (*gorm.DB, error) {
+	maxRetries := 5
+	retryDelay := 4 * time.Second // 4 saniye bekle, toplam 20 saniye
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		logger.Infof("Database connection attempt %d/%d", attempt, maxRetries)
+
+		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err == nil {
+			logger.Info("Database connection successful")
+			return db, nil
+		}
+
+		logger.Warnf("Database connection attempt %d failed: %v", attempt, err)
+
+		if attempt < maxRetries {
+			logger.Infof("Retrying in %v...", retryDelay)
+			time.Sleep(retryDelay)
+		}
+	}
+
+	return nil, fmt.Errorf("failed to connect to database after %d attempts", maxRetries)
+}
 
 func main() {
 	// Config ve logger'ı yükle
@@ -47,10 +74,10 @@ func main() {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort)
 
-	// PostgreSQL için Gorm Open kullanımı
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	// PostgreSQL için Gorm Open kullanımı - 5 kez deneme ile
+	db, err := connectToDatabaseWithRetry(dsn, logger)
 	if err != nil {
-		logger.Fatal("Database connection failed: ", err)
+		logger.Fatal("Database connection failed after 5 attempts: ", err)
 	}
 
 	// Veritabanı modellerini migrate ederek tabloları oluşturun
