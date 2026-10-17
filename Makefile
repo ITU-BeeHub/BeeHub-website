@@ -54,7 +54,7 @@ deploy-backend: backend ## Install the API binaries and restart the service
 		echo "API did not become healthy, see: journalctl -u $(SERVICE)"; exit 1
 
 deploy-frontend: frontend ## Publish the frontend build to the web root
-	rsync -a --delete frontend/dist/ $(WEB_ROOT)/
+	rsync -rlt --delete --chmod=D755,F644 frontend/dist/ $(WEB_ROOT)/
 
 db-up: ## Start PostgreSQL and wait until it is healthy
 	$(COMPOSE) up -d --wait
