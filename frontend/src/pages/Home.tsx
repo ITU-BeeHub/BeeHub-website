@@ -16,7 +16,7 @@ export default function Home() {
     const [selectedOS, setSelectedOS] = useState("windows");
 
     const handleDownload = async () => {
-        const downloadUrl = `https://beehubapp.com/api/download?os=${selectedOS}`;
+        const downloadUrl = `/api/download?os=${selectedOS}`;
         try {
             window.location.href = downloadUrl;
         } catch (error) {
