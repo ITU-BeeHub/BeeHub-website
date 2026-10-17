@@ -9,12 +9,10 @@ import IpLogs from "./components/IpLogs";
 import PrivateRoute from "./components/PrivateRoute";
 import Documentation from "./pages/Documentation";
 import BeePickerDoc from "./pages/BeePickerDoc";
-import BeeChatDoc from "./pages/BeeChatDoc";
-import BeeCalendarDoc from "./pages/BeeCalendarDoc";
 import BeeArchiveDoc from "./pages/BeeArchiveDoc";
-import BeeSyncDoc from "./pages/BeeSyncDoc";
 import Contact from "./pages/Contact";
 import PageNotFound from "./pages/PageNotFound";
+import WhatsNew from "./pages/WhatsNew";
 
 function AppContent() {
   return (
@@ -29,11 +27,9 @@ function AppContent() {
         <Route path="/admin/ip-logs" element={<PrivateRoute><IpLogs /></PrivateRoute>} />
         <Route path="/documentation" element={<Documentation />} />
         <Route path="/beepicker" element={<BeePickerDoc />} />
-        <Route path="/beechat" element={<BeeChatDoc />} />
-        <Route path="/beecalendar" element={<BeeCalendarDoc />} />
         <Route path="/beearchive" element={<BeeArchiveDoc />} />
-        <Route path="/beesync" element={<BeeSyncDoc />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/whats-new" element={<WhatsNew />} />
         <Route path="*" element={<PageNotFound />} /> {/* Catch-all for undefined routes */}
       </Routes>
     </Layout>
