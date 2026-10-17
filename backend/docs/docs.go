@@ -15,69 +15,70 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin/download-stats": {
+        "/admin/downloads": {
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
-                "description": "Returns the download statistics for the application, accessible only by admin users.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Get download statistics",
-                "responses": {
-                    "200": {
-                        "description": "Returns download statistics grouped by OS",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "integer"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/ip-logs": {
-            "get": {
-                "security": [
+                "summary": "Download log",
+                "parameters": [
                     {
-                        "ApiKeyAuth": []
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "type": "integer",
+                        "default": 25,
+                        "description": "Page size",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search in IP address and country",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "windows",
+                            "mac"
+                        ],
+                        "type": "string",
+                        "description": "Platform filter",
+                        "name": "os",
+                        "in": "query"
                     }
                 ],
-                "description": "Returns recent IP logs, accessible only by admin users.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Get IP logs",
                 "responses": {
                     "200": {
-                        "description": "Returns list of downloads with IP and OS",
+                        "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Download"
-                            }
+                            "$ref": "#/definitions/admin.DownloadPage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/httpx.ErrorResponse"
                         }
                     }
                 }
@@ -85,7 +86,6 @@ const docTemplate = `{
         },
         "/admin/login": {
             "post": {
-                "description": "Authenticates an admin user and returns a JWT token.",
                 "consumes": [
                     "application/json"
                 ],
@@ -98,66 +98,166 @@ const docTemplate = `{
                 "summary": "Admin login",
                 "parameters": [
                     {
-                        "description": "Admin login credentials",
-                        "name": "admin",
+                        "description": "Admin credentials",
+                        "name": "credentials",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.AdminLoginRequest"
+                            "$ref": "#/definitions/auth.LoginRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "JWT token",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.TokenResponse"
+                            "$ref": "#/definitions/auth.LoginResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid request",
+                        "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/httpx.ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "Invalid username or password",
+                        "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/admin/monthly-download-stats": {
+        "/admin/stats/daily": {
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "BearerAuth": []
                     }
                 ],
-                "description": "Returns the monthly download statistics, accessible only by admin users.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Get monthly download statistics",
+                "summary": "Daily downloads",
+                "parameters": [
+                    {
+                        "maximum": 366,
+                        "type": "integer",
+                        "default": 30,
+                        "description": "Number of days, today included",
+                        "name": "days",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Returns monthly download statistics",
+                        "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.MonthlyDownloadStats"
+                                "$ref": "#/definitions/admin.SeriesPoint"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/models.ErrorResponse"
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/stats/monthly": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Monthly downloads",
+                "parameters": [
+                    {
+                        "maximum": 60,
+                        "type": "integer",
+                        "default": 12,
+                        "description": "Number of months, the current one included",
+                        "name": "months",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/admin.SeriesPoint"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/stats/summary": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Download summary",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/admin.Summary"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
                         }
                     }
                 }
@@ -165,20 +265,22 @@ const docTemplate = `{
         },
         "/download": {
             "get": {
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Serves the installer of the current release. Only the request that starts a download is counted; HEAD requests, ranged requests that resume or split a transfer, and repeats within the dedup window are not.",
                 "produces": [
-                    "application/json"
+                    "application/octet-stream"
                 ],
                 "tags": [
-                    "Download Manager"
+                    "Download"
                 ],
-                "summary": "Download installer for the selected OS",
+                "summary": "Download the installer",
                 "parameters": [
                     {
+                        "enum": [
+                            "windows",
+                            "mac"
+                        ],
                         "type": "string",
-                        "description": "Operating System (windows, mac, linux)",
+                        "description": "Target platform",
                         "name": "os",
                         "in": "query",
                         "required": true
@@ -186,27 +288,35 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Returns the installer file",
+                        "description": "OK",
                         "schema": {
                             "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/version": {
+        "/health": {
             "get": {
-                "description": "Returns the current version of the BeeHub Web API",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Version"
+                    "Health"
                 ],
-                "summary": "Get version information",
+                "summary": "Health check",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -216,13 +326,112 @@ const docTemplate = `{
                                 "type": "string"
                             }
                         }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/version": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Version"
+                ],
+                "summary": "Current release",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/version.Info"
+                        }
                     }
                 }
             }
         }
     },
     "definitions": {
-        "auth.AdminLoginRequest": {
+        "admin.DownloadPage": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/download.Download"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.PlatformCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "os": {
+                    "type": "string"
+                }
+            }
+        },
+        "admin.SeriesPoint": {
+            "type": "object",
+            "properties": {
+                "byPlatform": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "period": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.Summary": {
+            "type": "object",
+            "properties": {
+                "byPlatform": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/admin.PlatformCount"
+                    }
+                },
+                "last30Days": {
+                    "type": "integer"
+                },
+                "last7Days": {
+                    "type": "integer"
+                },
+                "today": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "uniqueIps": {
+                    "type": "integer"
+                }
+            }
+        },
+        "auth.LoginRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -237,7 +446,18 @@ const docTemplate = `{
                 }
             }
         },
-        "models.Download": {
+        "auth.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "expiresAt": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "download.Download": {
             "type": "object",
             "properties": {
                 "country": {
@@ -249,16 +469,15 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "ipaddress": {
+                "ipAddress": {
                     "type": "string"
                 },
                 "os": {
-                    "description": "windows, mac, linux gibi",
                     "type": "string"
                 }
             }
         },
-        "models.ErrorResponse": {
+        "httpx.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -266,36 +485,35 @@ const docTemplate = `{
                 }
             }
         },
-        "models.MonthlyDownloadStats": {
+        "version.Info": {
             "type": "object",
             "properties": {
-                "count": {
-                    "type": "integer"
+                "download_url": {
+                    "type": "string"
                 },
-                "month": {
+                "version": {
                     "type": "string"
                 }
             }
-        },
-        "models.TokenResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string"
-                }
-            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
+	Version:          "2.0",
 	Host:             "",
-	BasePath:         "",
+	BasePath:         "/api",
 	Schemes:          []string{},
-	Title:            "BeeHub Web Site API",
-	Description:      "Bu, BeeHub web sitesi için API belgeleridir.",
+	Title:            "BeeHub Website API",
+	Description:      "Installer downloads, release information and the admin reporting API.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

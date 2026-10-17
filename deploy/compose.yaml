@@ -1,0 +1,36 @@
+# PostgreSQL for the BeeHub website.
+#
+# Use the Makefile targets (make db-up, db-backup, db-psql), which pass the
+# credentials from /etc/beehub/env. The data lives in the external volume
+# `beehub_postgres_data` (/var/lib/docker/volumes/beehub_postgres_data), so
+# `docker compose down -v` cannot delete it. Create it once with
+# `docker volume create beehub_postgres_data`.
+name: beehub
+
+services:
+  db:
+    # Stay on the Debian release the cluster was initialized with: a glibc
+    # upgrade can change collation order and silently corrupt text indexes.
+    # Minor PostgreSQL updates are safe; a major upgrade needs dump/restore.
+    image: postgres:17-bookworm
+    container_name: beehub-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:?set DB_NAME in /etc/beehub/env}
+      POSTGRES_USER: ${DB_USER:?set DB_USER in /etc/beehub/env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in /etc/beehub/env}
+    ports:
+      # Loopback only: published ports bypass ufw.
+      - "127.0.0.1:${DB_PORT:-5429}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+    name: beehub_postgres_data
+    external: true

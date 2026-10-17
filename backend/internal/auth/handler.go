@@ -1,52 +1,65 @@
 package auth
 
 import (
+	"errors"
+	"log/slog"
 	"net/http"
+	"time"
 
-	"github.com/ITU-BeeHub/BeeHub-website/backend/pkg/models"
+	"github.com/ITU-BeeHub/BeeHub-website/backend/internal/httpx"
 	"github.com/gin-gonic/gin"
 )
 
-// AdminLoginRequest, giriş isteğini temsil eder
-type AdminLoginRequest struct {
+type Handler struct {
+	service *Service
+	log     *slog.Logger
+}
+
+func NewHandler(service *Service, log *slog.Logger) *Handler {
+	return &Handler{service: service, log: log}
+}
+
+type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
-// AdminHandler, HTTP isteklerini işler
-type AdminHandler struct {
-	service *AdminService
+type LoginResponse struct {
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expiresAt"`
 }
 
-func NewAdminHandler(service *AdminService) *AdminHandler {
-	return &AdminHandler{service: service}
-}
-
-// LoginHandler, admin kullanıcılarının giriş yapmasına olanak tanır.
-// @Summary Admin login
-// @Description Authenticates an admin user and returns a JWT token.
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param admin body auth.AdminLoginRequest true "Admin login credentials"
-// @Success 200 {object} models.TokenResponse "JWT token"
-// @Failure 400 {object} models.ErrorResponse "Invalid request"
-// @Failure 401 {object} models.ErrorResponse "Invalid username or password"
-// @Router /admin/login [post]
-func (h *AdminHandler) LoginHandler(c *gin.Context) {
-	var req AdminLoginRequest
+// Login exchanges admin credentials for a session token.
+//
+// @Summary  Admin login
+// @Tags     Auth
+// @Accept   json
+// @Produce  json
+// @Param    credentials body LoginRequest true "Admin credentials"
+// @Success  200 {object} LoginResponse
+// @Failure  400 {object} httpx.ErrorResponse
+// @Failure  401 {object} httpx.ErrorResponse
+// @Failure  429 {object} httpx.ErrorResponse
+// @Router   /admin/login [post]
+func (h *Handler) Login(c *gin.Context) {
+	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, models.ErrorResponse{Error: "Invalid request"})
+		httpx.Error(c, http.StatusBadRequest, "username and password are required")
 		return
 	}
 
-	// Servis katmanına yönlendirme yap
-	token, err := h.service.AuthenticateAdmin(req.Username, req.Password)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.ErrorResponse{Error: "Invalid username or password"})
+	session, err := h.service.Login(c.Request.Context(), req.Username, req.Password)
+	switch {
+	case errors.Is(err, ErrInvalidCredentials):
+		h.log.Warn("admin login failed", "username", req.Username, "ip", c.ClientIP())
+		httpx.Error(c, http.StatusUnauthorized, "invalid username or password")
+		return
+	case err != nil:
+		h.log.Error("admin login", "error", err)
+		httpx.Error(c, http.StatusInternalServerError, "internal error")
 		return
 	}
 
-	// Başarılı giriş durumunda JWT token döner
-	c.JSON(http.StatusOK, models.TokenResponse{Token: token})
+	h.log.Info("admin logged in", "username", req.Username, "ip", c.ClientIP())
+	c.JSON(http.StatusOK, LoginResponse{Token: session.Token, ExpiresAt: session.ExpiresAt})
 }

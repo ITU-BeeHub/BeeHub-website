@@ -14,6 +14,13 @@ export default defineConfig({
     }
   },
   plugins: [react()],
+  server: {
+    // In development the API runs locally; in production nginx serves both
+    // from the same origin.
+    proxy: {
+      '/api': process.env.VITE_API_PROXY ?? 'http://127.0.0.1:9000',
+    },
+  },
   css: {
     postcss: './postcss.config.js',
   },

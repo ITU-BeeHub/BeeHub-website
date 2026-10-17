@@ -1,13 +1,13 @@
+import { Outlet } from "react-router-dom";
 import Footer from "./Footer";
 import Header from "./Header";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout() {
     return (
-        <div className=" h-screen overflow-hidden flex-col">
-
+        <div className="min-h-screen flex flex-col">
             <Header />
-            <main className="flex-1 overflow-y-auto   bg-[#F5FDFD] justify-center">
-                {children}
+            <main className="flex-grow overflow-auto">
+                <Outlet />
             </main>
             <Footer />
         </div>

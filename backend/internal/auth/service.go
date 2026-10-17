@@ -1,99 +1,70 @@
 package auth
 
 import (
+	"context"
 	"errors"
-	"os"
+	"fmt"
 	"time"
 
-	"github.com/ITU-BeeHub/BeeHub-website/backend/pkg/models"
-	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
+var ErrInvalidCredentials = errors.New("invalid username or password")
 
-// AdminService, admin işlemleriyle ilgili iş mantığını içerir
-type AdminService struct {
-	db *gorm.DB
+// dummyHash is compared against when the username does not exist, so a
+// login attempt takes the same time whether or not the user exists.
+var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("dummy-password"), bcrypt.DefaultCost)
+
+// Session is an authenticated admin session.
+type Session struct {
+	Token     string
+	ExpiresAt time.Time
 }
 
-func NewAdminService(db *gorm.DB) *AdminService {
-	return &AdminService{db: db}
+// Service authenticates admins against the database.
+type Service struct {
+	db     *gorm.DB
+	tokens *TokenManager
 }
 
-// Claims, JWT token'ı için gerekli olan bilgileri tutar.
-type Claims struct {
-	Username string `json:"username"`
-	jwt.StandardClaims
+func NewService(db *gorm.DB, tokens *TokenManager) *Service {
+	return &Service{db: db, tokens: tokens}
 }
 
-// AuthenticateAdmin, kullanıcı adı ve şifreyi doğrular ve JWT token döner
-func (s *AdminService) AuthenticateAdmin(username, password string) (string, error) {
-	var admin models.Admin
-
-	// Veritabanından admin kullanıcısını bul
-	if err := s.db.Where("username = ?", username).First(&admin).Error; err != nil {
-		return "", errors.New("invalid username or password")
+// Login verifies the credentials and opens a session.
+func (s *Service) Login(ctx context.Context, username, password string) (Session, error) {
+	var admin Admin
+	err := s.db.WithContext(ctx).Where("username = ?", username).First(&admin).Error
+	switch {
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		_ = bcrypt.CompareHashAndPassword(dummyHash, []byte(password))
+		return Session{}, ErrInvalidCredentials
+	case err != nil:
+		return Session{}, fmt.Errorf("find admin: %w", err)
 	}
 
-	// Şifreyi kontrol et
-	if !CheckPasswordHash(password, admin.Password) {
-		return "", errors.New("invalid username or password")
+	if bcrypt.CompareHashAndPassword([]byte(admin.PasswordHash), []byte(password)) != nil {
+		return Session{}, ErrInvalidCredentials
 	}
 
-	// JWT token oluştur
-	token, err := generateJWT(username)
+	token, expiresAt, err := s.tokens.Issue(admin.Username)
 	if err != nil {
-		return "", err
+		return Session{}, err
 	}
-
-	return token, nil
+	return Session{Token: token, ExpiresAt: expiresAt}, nil
 }
 
-// GenerateJWT, admin kullanıcısı için bir JWT token oluşturur
-func generateJWT(username string) (string, error) {
-	expirataionTime := time.Now().Add(6 * time.Hour)
-	claims := &Claims{
-		Username: username,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirataionTime.Unix(),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtSecret)
+// SetPassword creates the admin or replaces its password.
+func (s *Service) SetPassword(ctx context.Context, username, password string) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", err
-	}
-	return tokenString, nil
-}
-
-// ValidateToken, verilen token'ı doğrular ve JWT claim'lerini döner
-func ValidateToken(tokenString string) (*Claims, error) {
-	claims := &Claims{}
-
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
-	})
-
-	if err != nil || !token.Valid {
-		return nil, errors.New("invalid token")
+		return fmt.Errorf("hash password: %w", err)
 	}
 
-	return claims, nil
-}
-
-// HashPassword, şifreyi bcrypt ile hashler
-func HashPassword(password string) (string, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-	return string(hashedPassword), nil
-}
-
-// CheckPasswordHash, verilen şifre ile veritabanındaki hash'i karşılaştırır
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
+	admin := Admin{Username: username}
+	return s.db.WithContext(ctx).
+		Where(Admin{Username: username}).
+		Assign(Admin{PasswordHash: string(hash)}).
+		FirstOrCreate(&admin).Error
 }

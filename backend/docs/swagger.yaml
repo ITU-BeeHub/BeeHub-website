@@ -1,5 +1,54 @@
+basePath: /api
 definitions:
-  auth.AdminLoginRequest:
+  admin.DownloadPage:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/download.Download'
+        type: array
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+    type: object
+  admin.PlatformCount:
+    properties:
+      count:
+        type: integer
+      os:
+        type: string
+    type: object
+  admin.SeriesPoint:
+    properties:
+      byPlatform:
+        additionalProperties:
+          type: integer
+        type: object
+      period:
+        type: string
+      total:
+        type: integer
+    type: object
+  admin.Summary:
+    properties:
+      byPlatform:
+        items:
+          $ref: '#/definitions/admin.PlatformCount'
+        type: array
+      last7Days:
+        type: integer
+      last30Days:
+        type: integer
+      today:
+        type: integer
+      total:
+        type: integer
+      uniqueIps:
+        type: integer
+    type: object
+  auth.LoginRequest:
     properties:
       password:
         type: string
@@ -9,7 +58,14 @@ definitions:
     - password
     - username
     type: object
-  models.Download:
+  auth.LoginResponse:
+    properties:
+      expiresAt:
+        type: string
+      token:
+        type: string
+    type: object
+  download.Download:
     properties:
       country:
         type: string
@@ -17,155 +73,221 @@ definitions:
         type: string
       id:
         type: integer
-      ipaddress:
+      ipAddress:
         type: string
       os:
-        description: windows, mac, linux gibi
         type: string
     type: object
-  models.ErrorResponse:
+  httpx.ErrorResponse:
     properties:
       error:
         type: string
     type: object
-  models.MonthlyDownloadStats:
+  version.Info:
     properties:
-      count:
-        type: integer
-      month:
+      download_url:
         type: string
-    type: object
-  models.TokenResponse:
-    properties:
-      token:
+      version:
         type: string
     type: object
 info:
   contact: {}
-  description: Bu, BeeHub web sitesi için API belgeleridir.
-  title: BeeHub Web Site API
-  version: "1.0"
+  description: Installer downloads, release information and the admin reporting API.
+  title: BeeHub Website API
+  version: "2.0"
 paths:
-  /admin/download-stats:
+  /admin/downloads:
     get:
-      description: Returns the download statistics for the application, accessible
-        only by admin users.
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 25
+        description: Page size
+        in: query
+        maximum: 100
+        name: pageSize
+        type: integer
+      - description: Search in IP address and country
+        in: query
+        name: q
+        type: string
+      - description: Platform filter
+        enum:
+        - windows
+        - mac
+        in: query
+        name: os
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Returns download statistics grouped by OS
+          description: OK
           schema:
-            additionalProperties:
-              type: integer
-            type: object
+            $ref: '#/definitions/admin.DownloadPage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/models.ErrorResponse'
+            $ref: '#/definitions/httpx.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Get download statistics
-      tags:
-      - Admin
-  /admin/ip-logs:
-    get:
-      description: Returns recent IP logs, accessible only by admin users.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Returns list of downloads with IP and OS
-          schema:
-            items:
-              $ref: '#/definitions/models.Download'
-            type: array
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get IP logs
+      - BearerAuth: []
+      summary: Download log
       tags:
       - Admin
   /admin/login:
     post:
       consumes:
       - application/json
-      description: Authenticates an admin user and returns a JWT token.
       parameters:
-      - description: Admin login credentials
+      - description: Admin credentials
         in: body
-        name: admin
+        name: credentials
         required: true
         schema:
-          $ref: '#/definitions/auth.AdminLoginRequest'
+          $ref: '#/definitions/auth.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: JWT token
+          description: OK
           schema:
-            $ref: '#/definitions/models.TokenResponse'
+            $ref: '#/definitions/auth.LoginResponse'
         "400":
-          description: Invalid request
+          description: Bad Request
           schema:
-            $ref: '#/definitions/models.ErrorResponse'
-        "401":
-          description: Invalid username or password
-          schema:
-            $ref: '#/definitions/models.ErrorResponse'
-      summary: Admin login
-      tags:
-      - Auth
-  /admin/monthly-download-stats:
-    get:
-      description: Returns the monthly download statistics, accessible only by admin
-        users.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Returns monthly download statistics
-          schema:
-            items:
-              $ref: '#/definitions/models.MonthlyDownloadStats'
-            type: array
+            $ref: '#/definitions/httpx.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/models.ErrorResponse'
+            $ref: '#/definitions/httpx.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      summary: Admin login
+      tags:
+      - Auth
+  /admin/stats/daily:
+    get:
+      parameters:
+      - default: 30
+        description: Number of days, today included
+        in: query
+        maximum: 366
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/admin.SeriesPoint'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Get monthly download statistics
+      - BearerAuth: []
+      summary: Daily downloads
+      tags:
+      - Admin
+  /admin/stats/monthly:
+    get:
+      parameters:
+      - default: 12
+        description: Number of months, the current one included
+        in: query
+        maximum: 60
+        name: months
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/admin.SeriesPoint'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Monthly downloads
+      tags:
+      - Admin
+  /admin/stats/summary:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/admin.Summary'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Download summary
       tags:
       - Admin
   /download:
     get:
-      consumes:
-      - application/json
+      description: Serves the installer of the current release. Only the request that
+        starts a download is counted; HEAD requests, ranged requests that resume or
+        split a transfer, and repeats within the dedup window are not.
       parameters:
-      - description: Operating System (windows, mac, linux)
+      - description: Target platform
+        enum:
+        - windows
+        - mac
         in: query
         name: os
         required: true
         type: string
       produces:
-      - application/json
+      - application/octet-stream
       responses:
         "200":
-          description: Returns the installer file
+          description: OK
           schema:
             type: file
-      summary: Download installer for the selected OS
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      summary: Download the installer
       tags:
-      - Download Manager
-  /version:
+      - Download
+  /health:
     get:
-      consumes:
-      - application/json
-      description: Returns the current version of the BeeHub Web API
       produces:
       - application/json
       responses:
@@ -175,7 +297,28 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Get version information
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/httpx.ErrorResponse'
+      summary: Health check
+      tags:
+      - Health
+  /version:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/version.Info'
+      summary: Current release
       tags:
       - Version
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
