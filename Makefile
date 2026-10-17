@@ -60,8 +60,8 @@ db-up: ## Start PostgreSQL and wait until it is healthy
 	$(COMPOSE) up -d --wait
 
 db-backup: ## Dump the database to BACKUP_DIR (~/backups/beehub)
-	mkdir -p $(BACKUP_DIR)
-	docker exec beehub-db sh -c 'pg_dump -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -Fc' \
+	umask 077 && mkdir -p $(BACKUP_DIR) && \
+		docker exec beehub-db sh -c 'pg_dump -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -Fc' \
 		> $(BACKUP_DIR)/beehub-$$(date +%Y%m%d-%H%M%S).dump
 	@ls -lh $(BACKUP_DIR) | tail -n 3
 
