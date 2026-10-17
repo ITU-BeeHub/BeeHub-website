@@ -40,7 +40,7 @@ test-integration: ## Run all backend tests against a throwaway PostgreSQL
 		-p 127.0.0.1:55432:5432 postgres:17-bookworm >/dev/null
 	until docker exec $(TEST_DB_NAME) pg_isready -h 127.0.0.1 -q; do sleep 1; done
 	cd backend && TEST_DATABASE_URL='$(TEST_DB_URL)' go test -race -count=1 ./...; \
-		status=$$?; docker rm -f $(TEST_DB_NAME) >/dev/null; exit $$status
+		status=$$?; docker rm -fv $(TEST_DB_NAME) >/dev/null; exit $$status
 
 deploy: deploy-backend deploy-frontend ## Deploy the API and the frontend
 

@@ -2,7 +2,9 @@
 #
 # Use the Makefile targets (make db-up, db-backup, db-psql), which pass the
 # credentials from /etc/beehub/env. The data lives in the external volume
-# `beehub_pgdata`, so `docker compose down -v` cannot delete it.
+# `beehub_postgres_data` (/var/lib/docker/volumes/beehub_postgres_data), so
+# `docker compose down -v` cannot delete it. Create it once with
+# `docker volume create beehub_postgres_data`.
 name: beehub
 
 services:
@@ -30,5 +32,5 @@ services:
 
 volumes:
   pgdata:
-    name: beehub_pgdata
+    name: beehub_postgres_data
     external: true

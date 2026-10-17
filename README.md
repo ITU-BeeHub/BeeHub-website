@@ -68,7 +68,7 @@ with `sudo`.
 | API binaries | `/opt/beehub/bin/` |
 | Installers | `/opt/beehub/installers/installer_<version>.{exe,dmg}` |
 | Frontend | `/var/www/beehubapp.com/` |
-| Database | container `beehub-db`, data in Docker volume `beehub_pgdata` |
+| Database | container `beehub-db`, data in Docker volume `beehub_postgres_data` (`/var/lib/docker/volumes/beehub_postgres_data`) |
 | Logs | `journalctl -u beehub-backend` |
 | Backups | `~/backups/beehub/` |
 
@@ -82,7 +82,7 @@ sudo install -m 644 deploy/nginx/beehubapp.com.conf /etc/nginx/sites-available/b
 sudo ln -sf /etc/nginx/sites-available/beehubapp.com /etc/nginx/sites-enabled/beehubapp.com
 sudo nginx -t && sudo systemctl reload nginx
 
-docker volume create beehub_pgdata
+docker volume create beehub_postgres_data
 make db-up
 make deploy
 make admin-user USERNAME=<name>
